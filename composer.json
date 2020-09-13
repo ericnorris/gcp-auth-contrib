@@ -8,5 +8,13 @@
             "email": "erictnorris@gmail.com"
         }
     ],
-    "require": {}
+    "autoload": {
+        "psr-4": {
+            "ericnorris\\GCPAuthContrib\\": "src"
+        }
+    },
+    "require": {},
+    "require-dev": {
+        "vimeo/psalm": "^3.15"
+    }
 }

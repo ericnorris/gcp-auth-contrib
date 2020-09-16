@@ -13,8 +13,18 @@
             "ericnorris\\GCPAuthContrib\\": "src"
         }
     },
-    "require": {},
+    "autoload-dev": {
+        "psr-4": {
+            "ericnorris\\GCPAuthContrib\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "guzzlehttp/psr7": "^1.6",
+        "guzzlehttp/guzzle": "^7.0"
+    },
     "require-dev": {
-        "vimeo/psalm": "^3.15"
+        "vimeo/psalm": "^3.15",
+        "phpunit/phpunit": "^9.3",
+        "spatie/phpunit-snapshot-assertions": "^4.2"
     }
 }

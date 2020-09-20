@@ -63,15 +63,6 @@ class MetadataServerCredentials implements CredentialsWithProjectID {
     }
 
     /**
-     * Returns the project ID from the metadata server.
-     *
-     * @return string
-     */
-    public function fetchProjectID(): string {
-        return $this->sendMetadataRequest(self::PROJECT_URI);
-    }
-
-    /**
      * Fetches an identity token from the
      * {@link https://cloud.google.com/compute/docs/instances/verifying-instance-identity#request_signature
      * metadata server}.
@@ -99,6 +90,15 @@ class MetadataServerCredentials implements CredentialsWithProjectID {
         $responseBody = $this->sendMetadataRequest(self::ID_TOKEN_URI, \http_build_query($params));
 
         return new FetchIdentityTokenResponse($responseBody);
+    }
+
+    /**
+     * Fetches the project ID from the metadata server.
+     *
+     * @return string
+     */
+    public function fetchProjectID(): string {
+        return $this->sendMetadataRequest(self::PROJECT_URI);
     }
 
     private function sendMetadataRequest(string $uri, string $params = ""): string {

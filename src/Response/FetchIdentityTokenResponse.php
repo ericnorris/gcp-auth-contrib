@@ -10,6 +10,8 @@ use ericnorris\GCPAuthContrib\Contracts\ExpiresAt;
  * retrieved from the {@see Credentials::fetchIdentityToken} method.
  *
  * It implements {@see \ArrayAccess} in order to function as a normal array for code that expects it.
+ *
+ * @psalm-immutable
  */
 class FetchIdentityTokenResponse implements \ArrayAccess, ExpiresAt {
 
@@ -69,6 +71,9 @@ class FetchIdentityTokenResponse implements \ArrayAccess, ExpiresAt {
         return isset($this->$offset);
     }
 
+    /**
+     * @return mixed
+     */
     public function offsetGet($offset) {
         return $this->$offset;
     }

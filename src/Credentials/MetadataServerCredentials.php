@@ -54,10 +54,14 @@ class MetadataServerCredentials implements CredentialsWithProjectID {
         $responseBody = $this->sendMetadataRequest(self::ACCESS_TOKEN_URI, \http_build_query($params));
         $responseData = (array)\json_decode($responseBody, true, 16, JSON_THROW_ON_ERROR);
 
+        if (!isset($responseData["expires_in"])) {
+            throw new \DomainException("Response is missing 'expires_in' field");
+        }
+
         return new FetchAccessTokenResponse(
-            $responseData["access_token"],
-            Time::calculateExpiresAt($responseData["expires_in"])->getTimestamp(),
-            $responseData["scope"] ?? "",
+            (string)$responseData["access_token"],
+            Time::calculateExpiresAt((int)$responseData["expires_in"])->getTimestamp(),
+            (string)$responseData["scope"],
             "Bearer",
         );
     }

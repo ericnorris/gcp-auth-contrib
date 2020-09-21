@@ -1,10 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace ericnorris\GCPAuthContrib\Credentials;
+namespace ericnorris\GCPAuthContrib\Tests\Unit\Credentials;
 
 use PHPUnit\Framework\TestCase;
 use Spatie\Snapshots\MatchesSnapshots;
 
+use ericnorris\GCPAuthContrib\Credentials\ServiceAccountKey;
 use ericnorris\GCPAuthContrib\Time;
 
 

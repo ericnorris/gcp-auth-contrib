@@ -19,8 +19,10 @@ abstract class OAuth2Credentials implements Credentials {
 
     const OAUTH2_AUTHORIZATION_ENDPOINT = "https://oauth2.googleapis.com/token";
 
+
     /** @var ClientInterface */
     private $httpClient;
+
 
     public function __construct(ClientInterface $httpClient) {
         $this->httpClient = $httpClient;

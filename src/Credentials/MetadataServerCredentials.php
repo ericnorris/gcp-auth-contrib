@@ -18,7 +18,6 @@ use ericnorris\GCPAuthContrib\Time;
  */
 class MetadataServerCredentials implements CredentialsWithProjectID {
 
-
     const METADATA_ENDPOINT = "http://169.254.169.254/computeMetadata/v1/";
 
     const ACCESS_TOKEN_URI = "instance/service-accounts/default/token";

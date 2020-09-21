@@ -1,7 +1,6 @@
 <?php declare(strict_types=1);
 
 namespace ericnorris\GCPAuthContrib\Credentials;
-namespace ericnorris\GCPAuthContrib\Credentials;
 
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
@@ -107,7 +106,7 @@ class MetadataServerCredentials implements CredentialsWithProjectID {
 
     private function sendMetadataRequest(string $uri, string $params = ""): string {
         $response = $this->httpClient->send(new Request(
-            'GET',
+            "GET",
             self::METADATA_ENDPOINT . $uri,
             [
                 "Metadata-Flavor" => "Google",

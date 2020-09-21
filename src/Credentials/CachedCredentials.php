@@ -34,8 +34,7 @@ class CachedCredentials implements CredentialsWithProjectID {
     /**
      * Fetches an access token from the underlying source.
      *
-     * @param string[] $scopes An array of scopes to request from the metadata server. Only supported on App Engine,
-     *        Cloud Functions, and Cloud Run.
+     * @param string[] $scopes An array of scopes to request from the underlying source.
      *
      * @return FetchAccessTokenResponse
      */

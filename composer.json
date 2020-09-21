@@ -22,7 +22,8 @@
         "guzzlehttp/psr7": "^1.6",
         "guzzlehttp/guzzle": "^7.0",
         "psr/cache": "^1.0",
-        "symfony/cache": "^5.1"
+        "symfony/cache": "^5.1",
+        "firebase/php-jwt": "^5.2"
     },
     "require-dev": {
         "vimeo/psalm": "^3.15",

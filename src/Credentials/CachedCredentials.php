@@ -8,6 +8,7 @@ use Psr\Cache\CacheItemInterface;
 use ericnorris\GCPAuthContrib\Contracts\Credentials;
 use ericnorris\GCPAuthContrib\Contracts\CredentialsWithProjectID;
 use ericnorris\GCPAuthContrib\Contracts\ExpiresAt;
+use ericnorris\GCPAuthContrib\Internal\Contracts\CacheAwareCredentials;
 use ericnorris\GCPAuthContrib\Response\FetchAccessTokenResponse;
 use ericnorris\GCPAuthContrib\Response\FetchIdentityTokenResponse;
 use ericnorris\GCPAuthContrib\Time;
@@ -18,6 +19,7 @@ use ericnorris\GCPAuthContrib\Time;
  * cache invalidation for results that have limited lifetimes.
  */
 class CachedCredentials implements CredentialsWithProjectID {
+
 
     /** @var Credentials|CredentialsWithProjectID */
     private $source;
@@ -124,7 +126,19 @@ class CachedCredentials implements CredentialsWithProjectID {
      * @return string
      */
     private function makeCacheKey(string ...$args): string {
-        return sha1(\get_class($this->source) . "-" . implode("-", $args));
+        $cacheComponents = [
+            \get_class($this->source),
+            ...$args,
+        ];
+
+        if ($this->source instanceof CacheAwareCredentials) {
+            $cacheComponents = array_merge(
+                $cacheComponents,
+                $this->source->extendCacheKey()
+            );
+        }
+
+        return sha1(implode("-", $cacheComponents));
     }
 
 }

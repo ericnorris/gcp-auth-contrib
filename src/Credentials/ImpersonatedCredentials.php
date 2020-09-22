@@ -6,6 +6,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
 
 use ericnorris\GCPAuthContrib\Contracts\Credentials;
+use ericnorris\GCPAuthContrib\Internal\Contracts\CacheAwareCredentials;
 use ericnorris\GCPAuthContrib\Internal\Contracts\ParsesRFC3339Timestamps;
 use ericnorris\GCPAuthContrib\Response\FetchAccessTokenResponse;
 use ericnorris\GCPAuthContrib\Response\FetchIdentityTokenResponse;
@@ -16,7 +17,7 @@ use ericnorris\GCPAuthContrib\Response\FetchIdentityTokenResponse;
  * IAM Credentials API} in order to impersonate a target service account following the {@link
  * https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials short lived credentials} guide.
  */
-class ImpersonatedCredentials implements Credentials {
+class ImpersonatedCredentials implements Credentials, CacheAwareCredentials {
     use ParsesRFC3339Timestamps;
 
 
@@ -139,6 +140,19 @@ class ImpersonatedCredentials implements Credentials {
         $responseBody = (string)$response->getBody();
 
         return (array)\json_decode($responseBody, true, 16, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Returns additional data about this particular instance to avoid cache collisions for other impersonated accounts.
+     *
+     * @return string[]
+     */
+    public function extendCacheKey(): array {
+        return [
+            \get_class($this->source),
+            $this->target,
+            ...$this->delegates,
+        ];
     }
 
 }

@@ -13,9 +13,6 @@ class AuthorizedUserCredentials extends OAuth2Credentials implements Credentials
     const REFRESH_TOKEN_GRANT_TYPE = "refresh_token";
 
 
-    /** @var ClientInterface */
-    private $httpClient;
-
     /** @var string */
     private $clientId;
 
@@ -30,7 +27,7 @@ class AuthorizedUserCredentials extends OAuth2Credentials implements Credentials
 
 
     public function __construct(ClientInterface $httpClient, array $credentials) {
-        $this->httpClient = $httpClient;
+        parent::__construct($httpClient);
 
         if (!self::isAuthorizedUserCredentials($credentials)) {
             throw new \InvalidArgumentException("Argument does not appear to be OAuth2 credentials");

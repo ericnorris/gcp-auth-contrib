@@ -20,6 +20,9 @@ use ericnorris\GCPAuthContrib\Time;
  */
 class CachedCredentials implements CredentialsWithProjectID {
 
+    /** NOTE: incrementing this version will bust the cache for all consumers of this library. */
+    private const CACHE_VERSION = "v1";
+
 
     /** @var Credentials|CredentialsWithProjectID */
     private $source;
@@ -127,6 +130,7 @@ class CachedCredentials implements CredentialsWithProjectID {
      */
     private function makeCacheKey(string ...$args): string {
         $cacheComponents = [
+            self::CACHE_VERSION,
             \get_class($this->source),
             ...$args,
         ];

@@ -5,8 +5,9 @@ namespace ericnorris\GCPAuthContrib\Credentials;
 use Firebase\JWT\JWT;
 use GuzzleHttp\ClientInterface;
 
-use ericnorris\GCPAuthContrib\Contracts\CredentialsWithProjectID;
+use ericnorris\GCPAuthContrib\Contracts\Credentials;
 use ericnorris\GCPAuthContrib\Internal\Credentials\OAuth2Credentials;
+use ericnorris\GCPAuthContrib\Response\GenerateSignatureResponse;
 use ericnorris\GCPAuthContrib\Time;
 
 
@@ -14,7 +15,7 @@ use ericnorris\GCPAuthContrib\Time;
  * The ServiceAccountKey class uses a private key for a Google Cloud Platform (GCP) service account to sign OAuth2
  * "JWT bearer" authorization grant requests.
  */
-class ServiceAccountKey extends OAuth2Credentials implements CredentialsWithProjectID {
+class ServiceAccountKey extends OAuth2Credentials implements Credentials {
 
     const JWT_BEARER_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
@@ -29,6 +30,9 @@ class ServiceAccountKey extends OAuth2Credentials implements CredentialsWithProj
     private $privateKey;
 
     /** @var string */
+    private $privateKeyID;
+
+    /** @var string */
     private $projectID;
 
 
@@ -39,9 +43,10 @@ class ServiceAccountKey extends OAuth2Credentials implements CredentialsWithProj
             throw new \InvalidArgumentException("Argument does not appear to be a service account key");
         }
 
-        $this->clientEmail = (string)($serviceAccountKey["client_email"] ?? "");
-        $this->privateKey  = (string)($serviceAccountKey["private_key"] ?? "");
-        $this->projectID   = (string)($serviceAccountKey["project_id"] ?? "");
+        $this->clientEmail  = (string)($serviceAccountKey["client_email"] ?? "");
+        $this->privateKey   = (string)($serviceAccountKey["private_key"] ?? "");
+        $this->privateKeyID = (string)($serviceAccountKey["private_key_id"] ?? "");
+        $this->projectID    = (string)($serviceAccountKey["project_id"] ?? "");
 
         if (empty($this->clientEmail)) {
             throw new \InvalidArgumentException("Service account key has missing or empty 'client_email' field");
@@ -49,6 +54,10 @@ class ServiceAccountKey extends OAuth2Credentials implements CredentialsWithProj
 
         if (empty($this->privateKey)) {
             throw new \InvalidArgumentException("Service account key has missing or empty 'private_key' field");
+        }
+
+        if (empty($this->privateKeyID)) {
+            throw new \InvalidArgumentException("Service account key has missing or empty 'private_key_id' field");
         }
 
         if (empty($this->projectID)) {
@@ -60,8 +69,47 @@ class ServiceAccountKey extends OAuth2Credentials implements CredentialsWithProj
         return ($serviceAccountKey["type"] ?? "") === "service_account";
     }
 
+    /**
+     * Fetches the project ID from the service account key file.
+     *
+     * @return string
+     */
     public function fetchProjectID(): string {
         return $this->projectID;
+    }
+
+    /**
+     * Generates a signature using the service account's private key.
+     *
+     * @param string $toSign The bytes to sign.
+     *
+     * @return GenerateSignatureResponse
+     */
+    public function generateSignature(string $toSign): GenerateSignatureResponse {
+        if (!extension_loaded("openssl")) {
+            throw new \RuntimeException("'openssl' extension is missing, cannot generate signature.");
+        }
+
+        $signature = "";
+
+        if (!openssl_sign($toSign, $signature, $this->privateKey, "sha256WithRSAEncryption")) {
+            throw new \RuntimeException("Could not generate signature with 'openssl': " . \openssl_error_string());
+        }
+
+        return new GenerateSignatureResponse($this->privateKeyID, \base64_encode($signature));
+    }
+
+    /**
+     * Returns true if this class supports the given capability.
+     */
+    public function supportsCapability(string $capability): bool {
+        switch ($capability) {
+            case Credentials::CAN_FETCH_PROJECT_ID:
+                return true;
+
+            case Credentials::CAN_GENERATE_SIGNATURE:
+                return false;
+        }
     }
 
     protected function getOAuth2GrantType(): string {

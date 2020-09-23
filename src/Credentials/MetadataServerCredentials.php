@@ -5,9 +5,10 @@ namespace ericnorris\GCPAuthContrib\Credentials;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
 
-use ericnorris\GCPAuthContrib\Contracts\CredentialsWithProjectID;
+use ericnorris\GCPAuthContrib\Contracts\Credentials;
 use ericnorris\GCPAuthContrib\Response\FetchAccessTokenResponse;
 use ericnorris\GCPAuthContrib\Response\FetchIdentityTokenResponse;
+use ericnorris\GCPAuthContrib\Response\GenerateSignatureResponse;
 use ericnorris\GCPAuthContrib\Time;
 
 
@@ -16,7 +17,7 @@ use ericnorris\GCPAuthContrib\Time;
  * https://cloud.google.com/compute/docs/storing-retrieving-metadata metadata server}.
  *
  */
-class MetadataServerCredentials implements CredentialsWithProjectID {
+class MetadataServerCredentials implements Credentials {
 
     const METADATA_ENDPOINT = "http://169.254.169.254/computeMetadata/v1/";
 
@@ -101,6 +102,26 @@ class MetadataServerCredentials implements CredentialsWithProjectID {
      */
     public function fetchProjectID(): string {
         return $this->sendMetadataRequest(self::PROJECT_URI);
+    }
+
+    /**
+     * Not supported.
+     */
+    public function generateSignature(string $toSign): GenerateSignatureResponse {
+        throw new \BadMethodCallException(__CLASS__ . " does not support " . __FUNCTION__);
+    }
+
+    /**
+     * Returns true if this class supports the given capability.
+     */
+    public function supportsCapability(string $capability): bool {
+        switch ($capability) {
+            case Credentials::CAN_FETCH_PROJECT_ID:
+                return true;
+
+            case Credentials::CAN_GENERATE_SIGNATURE:
+                return false;
+        }
     }
 
     private function sendMetadataRequest(string $uri, string $params = ""): string {

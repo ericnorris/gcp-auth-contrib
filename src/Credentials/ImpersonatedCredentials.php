@@ -10,6 +10,7 @@ use ericnorris\GCPAuthContrib\Internal\Contracts\CacheAwareCredentials;
 use ericnorris\GCPAuthContrib\Internal\Contracts\ParsesRFC3339Timestamps;
 use ericnorris\GCPAuthContrib\Response\FetchAccessTokenResponse;
 use ericnorris\GCPAuthContrib\Response\FetchIdentityTokenResponse;
+use ericnorris\GCPAuthContrib\Response\GenerateSignatureResponse;
 
 
 /**
@@ -25,6 +26,7 @@ class ImpersonatedCredentials implements Credentials, CacheAwareCredentials {
 
     const ACCESS_TOKEN_URI   = "projects/-/serviceAccounts/%s:generateAccessToken";
     const IDENTITY_TOKEN_URI = "projects/-/serviceAccounts/%s:generateIdToken";
+    const SIGN_BLOB_URI      = "projects/-/serviceAccounts/%s:signBlob";
 
 
     /** @var ClientInterface */
@@ -56,7 +58,7 @@ class ImpersonatedCredentials implements Credentials, CacheAwareCredentials {
     /**
      * Fetches an access token using the IAM Credentials REST API
      * {@link https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/generateAccessToken
-     * generateAccessToken endpoint}.
+     * generateAccessToken} endpoint.
      *
      * @param string[] $scopes An array of scopes to request for the target service account's access token, must not be
      *        empty.
@@ -97,7 +99,7 @@ class ImpersonatedCredentials implements Credentials, CacheAwareCredentials {
     /**
      * Fetches an access token using the IAM Credentials REST API
      * {@link https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/generateIdToken
-     * generateIdToken endpoint}.
+     * generateIdToken} endpoint.
      *
      * @param string $audience The desired 'aud' claim in the Google-signed ID token.
      *
@@ -113,12 +115,61 @@ class ImpersonatedCredentials implements Credentials, CacheAwareCredentials {
             $params["delegates"] = $this->delegates;
         }
 
-        $responseBody = $this->sendIAMCredentialsRequest(
+        $responseData = $this->sendIAMCredentialsRequest(
             \sprintf(self::IDENTITY_TOKEN_URI, $this->target),
             $params,
         );
 
-        return new FetchIdentityTokenResponse((string)$responseBody["token"]);
+        return new FetchIdentityTokenResponse((string)$responseData["token"]);
+    }
+
+    /**
+     * Not supported.
+     */
+    public function fetchProjectID(): string {
+        throw new \BadMethodCallException(__CLASS__ . " does not support " . __FUNCTION__);
+    }
+
+    /**
+     * Generates a signature using the IAM Credentials REST API
+     * {@link https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/signBlob
+     * signBlob} endpoint.
+     *
+     * @param string $toSign The bytes to sign. The string is sent base64 encoded.
+     *
+     * @return GenerateSignatureResponse
+     */
+    public function generateSignature(string $toSign): GenerateSignatureResponse {
+        $params = [
+            "payload" => \base64_encode($toSign)
+        ];
+
+        if (!empty($this->delegates)) {
+            $params["delegates"] = $this->delegates;
+        }
+
+        $responseData = $this->sendIAMCredentialsRequest(
+            \sprintf(self::SIGN_BLOB_URI, $this->target),
+            $params,
+        );
+
+        return new GenerateSignatureResponse(
+            (string)$responseData["keyId"],
+            (string)$responseData["signedBlob"],
+        );
+    }
+
+    /**
+     * Returns true if this class supports the given capability.
+     */
+    public function supportsCapability(string $capability): bool {
+        switch ($capability) {
+            case Credentials::CAN_FETCH_PROJECT_ID:
+                return false;
+
+            case Credentials::CAN_GENERATE_SIGNATURE:
+                return true;
+        }
     }
 
     private function sendIAMCredentialsRequest(string $uri, array $params): array {

@@ -11,6 +11,7 @@ use ericnorris\GCPAuthContrib\Contracts\ExpiresAt;
 use ericnorris\GCPAuthContrib\Internal\Contracts\CacheAwareCredentials;
 use ericnorris\GCPAuthContrib\Response\FetchAccessTokenResponse;
 use ericnorris\GCPAuthContrib\Response\FetchIdentityTokenResponse;
+use ericnorris\GCPAuthContrib\Response\GenerateSignatureResponse;
 use ericnorris\GCPAuthContrib\Time;
 
 
@@ -18,13 +19,13 @@ use ericnorris\GCPAuthContrib\Time;
  * The CachedCredentials class fetches data from a credentials source and caches the results, taking care to handle
  * cache invalidation for results that have limited lifetimes.
  */
-class CachedCredentials implements CredentialsWithProjectID {
+class CachedCredentials implements Credentials {
 
     /** NOTE: incrementing this version will bust the cache for all consumers of this library. */
     private const CACHE_VERSION = "v1";
 
 
-    /** @var Credentials|CredentialsWithProjectID */
+    /** @var Credentials */
     private $source;
 
     /** @var CacheItemPoolInterface */
@@ -37,7 +38,7 @@ class CachedCredentials implements CredentialsWithProjectID {
     }
 
     /**
-     * Fetches an access token from the underlying source.
+     * Fetches an access token from the underlying source credentials.
      *
      * @param string[] $scopes An array of scopes to request from the underlying source.
      *
@@ -53,7 +54,7 @@ class CachedCredentials implements CredentialsWithProjectID {
     }
 
     /**
-     * Fetches an identity token from the underlying source.
+     * Fetches an identity token from the underlying source credentials.
      *
      * @param string $audience The desired 'aud' claim in the Google-signed ID token.
      *
@@ -69,26 +70,35 @@ class CachedCredentials implements CredentialsWithProjectID {
     }
 
     /**
-     * Fetches the project ID from the underlying source.
+     * Fetches the project ID from the underlying source credentials.
      *
      * @return string
      */
     public function fetchProjectID(): string {
-        if (!$this->source instanceof CredentialsWithProjectID) {
-            $className = get_class($this->source);
-
-            throw new \RuntimeException("Underlying credential source '$className' does not support 'fetchProjectID'");
-        }
-
-        // assist the static analyzer
-        $sourceWithProjectID = $this->source;
-
         return $this->memoize(
             $this->makeCacheKey(__FUNCTION__),
-            function() use ($sourceWithProjectID): string {
-                return $sourceWithProjectID->fetchProjectID();
+            function(): string {
+                return $this->source->fetchProjectID();
             },
         );
+    }
+
+    /**
+     * Generates a signature using the underlying source credentials.
+     *
+     * @param string $toSign The bytes to sign.
+     *
+     * @return GenerateSignatureResponse
+     */
+    public function generateSignature(string $toSign): GenerateSignatureResponse {
+        return $this->source->generateSignature($toSign);
+    }
+
+    /**
+     * Returns true if the underlying source credentials supports the given capability.
+     */
+    public function supportsCapability(string $capability): bool {
+        return $this->source->supportsCapability($capability);
     }
 
     /**

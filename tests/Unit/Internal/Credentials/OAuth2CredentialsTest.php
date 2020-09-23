@@ -8,6 +8,7 @@ use Spatie\Snapshots\MatchesSnapshots;
 use ericnorris\GCPAuthContrib\Internal\Credentials\OAuth2Credentials;
 use ericnorris\GCPAuthContrib\Response\FetchAccessTokenResponse;
 use ericnorris\GCPAuthContrib\Response\FetchIdentityTokenResponse;
+use ericnorris\GCPAuthContrib\Response\GenerateSignatureResponse;
 use ericnorris\GCPAuthContrib\Tests\MatchesRequestSnapshots;
 use ericnorris\GCPAuthContrib\Time;
 
@@ -30,11 +31,11 @@ final class OAuth2CredentialsTest extends TestCase {
 
     private const IDENTITY_TOKEN_RESPONSE = <<<'RESPONSE'
     {
-        "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjNmMzMyYjNlOWI5MjhiZmU1MWJjZjRmOGRhNTQzY2M0YmQ5ZDQ3MjQiLCJ0eXAiOiJ
-        KV1QifQ.eyJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiYXpwIjoiZmFrZUBleGFtcGxlLmNvbSIsImVtYWlsIjoiZmF
-        rZUBleGFtcGxlLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJleHAiOjE1OTk2MjE5MjgsImlhdCI6MTU5OTYxODMyOC
-        wiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoxMTExMzMzNTU1Nzc3OTk5MDAwMDB9.c2lnbmF0
-        dXJlCg"
+        "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjNmMzMyYjNlOWI5MjhiZmU1MWJjZjRmOGRhNTQzY2M0YmQ5ZD
+        Q3MjQiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiYXpwIjoiZmFrZUBleGFtcGxlLm
+        NvbSIsImVtYWlsIjoiZmFrZUBleGFtcGxlLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJleHAiOjE1OTk2MjE5M
+        jgsImlhdCI6MTU5OTYxODMyOCwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwic3ViIjoxMTExMzMz
+        NTU1Nzc3OTk5MDAwMDB9.c2lnbmF0dXJlCg"
     }
     RESPONSE;
 
@@ -88,6 +89,18 @@ final class OAuth2CredentialsImpl extends OAuth2Credentials {
 
     public function assertClaims(array $claims): array {
         return $claims + ["assertion-field" => "assertion"];
+    }
+
+    public function fetchProjectID(): string {
+        throw new \RuntimeException("not implemented");
+    }
+
+    public function generateSignature(string $toSign): GenerateSignatureResponse {
+        throw new \RuntimeException("not implemented");
+    }
+
+    public function supportsCapability(string $capability): bool {
+        return false;
     }
 
 }

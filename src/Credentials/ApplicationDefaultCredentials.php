@@ -7,15 +7,16 @@ use ericnorris\GCPAuthContrib\Contracts\CredentialsWithProjectID;
 use ericnorris\GCPAuthContrib\CredentialsFactory;
 use ericnorris\GCPAuthContrib\Response\FetchAccessTokenResponse;
 use ericnorris\GCPAuthContrib\Response\FetchIdentityTokenResponse;
+use ericnorris\GCPAuthContrib\Response\GenerateSignatureResponse;
 
 
 /**
  * The ApplicationDefaultCredentials class follows the
- * {@see https://cloud.google.com/docs/authentication/production#automatically ApplicationDefaultCredentials} pattern.
+ * {@link https://cloud.google.com/docs/authentication/production#automatically ApplicationDefaultCredentials} pattern.
  *
  * It defers credential loading until first use, in order to avoid causing spurious IO.
  */
-class ApplicationDefaultCredentials implements CredentialsWithProjectID {
+class ApplicationDefaultCredentials implements Credentials {
 
     const WELL_KNOWN_ENV_VAR   = "GOOGLE_APPLICATION_CREDENTIALS";
     const WELL_KNOWN_FILE_PATH = ".config/gcloud/application_default_credentials.json";
@@ -24,7 +25,7 @@ class ApplicationDefaultCredentials implements CredentialsWithProjectID {
     /** @var CredentialsFactory */
     private $credentialsFactory;
 
-    /** @var ?Credentials|CredentialsWithProjectID */
+    /** @var ?Credentials */
     private $lazyCredentials;
 
 
@@ -41,7 +42,7 @@ class ApplicationDefaultCredentials implements CredentialsWithProjectID {
     }
 
     /**
-     * Fetches an access token using the {@see https://cloud.google.com/docs/authentication/production#automatically
+     * Fetches an access token using the {@link https://cloud.google.com/docs/authentication/production#automatically
      * ApplicationDefaultCredentials} pattern.
      *
      * @param string[] $scopes An array of scopes to request from default credentials.
@@ -53,7 +54,7 @@ class ApplicationDefaultCredentials implements CredentialsWithProjectID {
     }
 
     /**
-     * Fetches an ID token using the {@see https://cloud.google.com/docs/authentication/production#automatically
+     * Fetches an ID token using the {@link https://cloud.google.com/docs/authentication/production#automatically
      * ApplicationDefaultCredentials} pattern.
      *
      * @param string $audience The desired 'aud' claim in the Google-signed ID token.
@@ -65,20 +66,30 @@ class ApplicationDefaultCredentials implements CredentialsWithProjectID {
     }
 
     /**
-     * Fetches the project ID from default credentials.
+     * Fetches the project ID from the default credentials.
      *
      * @return string
      */
     public function fetchProjectID(): string {
-        $source = $this->getLazyCredentials();
+        return $this->getLazyCredentials()->fetchProjectID();
+    }
 
-        if (!$source instanceof CredentialsWithProjectID) {
-            $className = get_class($source);
+    /**
+     * Generates a signature using the default credentials.
+     *
+     * @param string $toSign The bytes to sign.
+     *
+     * @return GenerateSignatureResponse
+     */
+    public function generateSignature(string $toSign): GenerateSignatureResponse {
+        return $this->getLazyCredentials()->generateSignature($toSign);
+    }
 
-            throw new \RuntimeException("Underlying credential source '$className' does not support 'fetchProjectID'");
-        }
-
-        return $source->fetchProjectID();
+    /**
+     * Returns true if the default credentials supports the given capability.
+     */
+    public function supportsCapability(string $capability): bool {
+        return $this->getLazyCredentials()->supportsCapability($capability);
     }
 
     private function getLazyCredentials(): Credentials {

@@ -15,10 +15,11 @@ final class ServiceAccountKeyTest extends TestCase {
     private const NOW = 1596153600;
 
     private const VALID_SERVICE_ACCOUNT_KEY = [
-        "type"         => "service_account",
-        "client_email" => "fake@example.com",
-        "private_key"  => self::SERVICE_ACCOUNT_PRIVATE_KEY,
-        "project_id"   => "a-project-id",
+        "type"           => "service_account",
+        "client_email"   => "fake@example.com",
+        "private_key"    => self::SERVICE_ACCOUNT_PRIVATE_KEY,
+        "private_key_id" => self::SERVICE_ACCOUNT_PRIVATE_KEY_ID,
+        "project_id"     => "a-project-id",
     ];
 
     private const SERVICE_ACCOUNT_PRIVATE_KEY = <<<'END'
@@ -51,6 +52,11 @@ final class ServiceAccountKeyTest extends TestCase {
     -----END RSA PRIVATE KEY-----
     END;
 
+    private const SERVICE_ACCOUNT_PRIVATE_KEY_ID = "1234";
+
+    private const STRING_TO_SIGN = "signable-string";
+
+
     public function setUp(): void {
         Time::setForTest(new \DateTimeImmutable("@" . self::NOW));
     }
@@ -70,6 +76,14 @@ final class ServiceAccountKeyTest extends TestCase {
         $fetcher = new ServiceAccountKey(new \GuzzleHttp\Client, $serviceAccountKey);
 
         $this->assertNotNull($fetcher);
+    }
+
+    public function testGeneratesSignature(): void {
+        $fetcher = new ServiceAccountKey(new \GuzzleHttp\Client, self::VALID_SERVICE_ACCOUNT_KEY);
+
+        $got = $fetcher->generateSignature(self::STRING_TO_SIGN);
+
+        $this->assertMatchesSnapshot($got);
     }
 
     public function testAssertClaims(): void {
@@ -96,6 +110,10 @@ final class ServiceAccountKeyTest extends TestCase {
             "private_key" => null,
         ] + self::VALID_SERVICE_ACCOUNT_KEY;
 
+        $missingPrivateKeyID = [
+            "private_key_id" => null,
+        ] + self::VALID_SERVICE_ACCOUNT_KEY;
+
         $missingProjectID = [
             "project_id" => null,
         ] + self::VALID_SERVICE_ACCOUNT_KEY;
@@ -105,6 +123,7 @@ final class ServiceAccountKeyTest extends TestCase {
             [$missingClientEmail, false],
             [$missingPrivateKey, false],
             [$missingProjectID, false],
+            [$missingPrivateKeyID, false],
             [self::VALID_SERVICE_ACCOUNT_KEY, true]
         ];
     }

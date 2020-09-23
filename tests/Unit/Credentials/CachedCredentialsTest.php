@@ -5,10 +5,11 @@ namespace ericnorris\GCPAuthContrib\Tests\Unit\Credentials;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
-use ericnorris\GCPAuthContrib\Contracts\CredentialsWithProjectID;
+use ericnorris\GCPAuthContrib\Contracts\Credentials;
 use ericnorris\GCPAuthContrib\Credentials\CachedCredentials;
 use ericnorris\GCPAuthContrib\Response\FetchAccessTokenResponse;
 use ericnorris\GCPAuthContrib\Response\FetchIdentityTokenResponse;
+use ericnorris\GCPAuthContrib\Response\GenerateSignatureResponse;
 
 
 final class CachedCredentialsTest extends TestCase {
@@ -29,7 +30,7 @@ final class CachedCredentialsTest extends TestCase {
     public function testFetchesAccessToken(): void {
         $cache = new ArrayAdapter;
 
-        $source  = new CredentialsWithProjectIDImpl;
+        $source  = new CredentialsImpl;
         $fetcher = new CachedCredentials($source, $cache);
 
         // cache miss and expired token
@@ -58,7 +59,7 @@ final class CachedCredentialsTest extends TestCase {
     public function testFetchesIdentityToken(): void {
         $cache = new ArrayAdapter;
 
-        $source  = new CredentialsWithProjectIDImpl;
+        $source  = new CredentialsImpl;
         $fetcher = new CachedCredentials($source, $cache);
 
         // cache miss and expired token
@@ -87,7 +88,7 @@ final class CachedCredentialsTest extends TestCase {
     public function testFetchesProjectID(): void {
         $cache = new ArrayAdapter;
 
-        $source  = new CredentialsWithProjectIDImpl;
+        $source  = new CredentialsImpl;
         $fetcher = new CachedCredentials($source, $cache);
 
         $want = $fetcher->fetchProjectID();
@@ -97,9 +98,22 @@ final class CachedCredentialsTest extends TestCase {
         $this->assertSame($want, $got);
     }
 
+    public function testGeneratesSignature(): void {
+        $cache = new ArrayAdapter;
+
+        $source  = new CredentialsImpl;
+        $fetcher = new CachedCredentials($source, $cache);
+
+        $dontWant = $fetcher->generateSignature("string");
+        $got      = $fetcher->generateSignature("string");
+
+        $this->assertSame(2, $source->timesCalled);
+        $this->assertNotEquals($dontWant, $got);
+    }
+
 }
 
-final class CredentialsWithProjectIDImpl implements CredentialsWithProjectID {
+final class CredentialsImpl implements Credentials {
 
     public $expires_in = 0;
 
@@ -138,6 +152,16 @@ final class CredentialsWithProjectIDImpl implements CredentialsWithProjectID {
         $this->timesCalled++;
 
         return "a-project-id";
+    }
+
+    public function generateSignature(string $toSign): GenerateSignatureResponse {
+        $this->timesCalled++;
+
+        return new GenerateSignatureResponse("key-id-{$this->timesCalled}", "signature");
+    }
+
+    public function supportsCapability(string $capability): bool {
+        return true;
     }
 
 }

@@ -6,6 +6,7 @@ use GuzzleHttp\ClientInterface;
 
 use ericnorris\GCPAuthContrib\Contracts\Credentials;
 use ericnorris\GCPAuthContrib\Internal\Credentials\OAuth2Credentials;
+use ericnorris\GCPAuthContrib\Response\GenerateSignatureResponse;
 
 
 class AuthorizedUserCredentials extends OAuth2Credentials implements Credentials {
@@ -53,6 +54,30 @@ class AuthorizedUserCredentials extends OAuth2Credentials implements Credentials
 
     public static function isAuthorizedUserCredentials(array $credentials): bool {
         return ($credentials["type"] ?? "") === "authorized_user";
+    }
+
+    /**
+     * Not supported.
+     */
+    public function fetchProjectID(): string {
+        throw new \BadMethodCallException(__CLASS__ . " does not support " . __FUNCTION__);
+    }
+
+    /**
+     * Not supported.
+     */
+    public function generateSignature(string $toSign): GenerateSignatureResponse {
+        throw new \BadMethodCallException(__CLASS__ . " does not support " . __FUNCTION__);
+    }
+
+    /**
+     * Returns true if this class supports the given capability.
+     */
+    public function supportsCapability(string $capability): bool {
+        switch ($capability) {
+            default:
+                return false;
+        }
     }
 
     protected function getOAuth2GrantType(): string {

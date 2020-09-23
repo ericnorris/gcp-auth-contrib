@@ -4,7 +4,9 @@ namespace ericnorris\GCPAuthContrib;
 
 use GuzzleHttp\ClientInterface;
 
+use ericnorris\GCPAuthContrib\Contracts\Credentials;
 use ericnorris\GCPAuthContrib\Credentials\AuthorizedUserCredentials;
+use ericnorris\GCPAuthContrib\Credentials\ImpersonatedCredentials;
 use ericnorris\GCPAuthContrib\Credentials\MetadataServerCredentials;
 use ericnorris\GCPAuthContrib\Credentials\ServiceAccountKey;
 
@@ -21,6 +23,13 @@ class CredentialsFactory {
 
     public function makeAuthorizedUserCredentials(array $credentials): AuthorizedUserCredentials {
         return new AuthorizedUserCredentials($this->httpClient, $credentials);
+    }
+
+    /**
+     * @param string[] $delegates
+     */
+    public function makeImpersonatedCredentials(Credentials $source, string $target, array $delegates = []): ImpersonatedCredentials {
+        return new ImpersonatedCredentials($this->httpClient, $source, $target, $delegates);
     }
 
     public function makeMetadataServerCredentials(): MetadataServerCredentials {

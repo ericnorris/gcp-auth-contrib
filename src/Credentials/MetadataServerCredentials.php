@@ -131,7 +131,7 @@ class MetadataServerCredentials implements Credentials {
                 return true;
 
             case Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL:
-                    return true;
+                return true;
 
             case Credentials::CAN_GENERATE_SIGNATURE:
                 return false;

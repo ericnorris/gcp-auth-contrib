@@ -75,6 +75,15 @@ class ApplicationDefaultCredentials implements Credentials {
     }
 
     /**
+     * Fetches the service account email from the default credentials.
+     *
+     * @return string
+     */
+    public function fetchServiceAccountEmail(): string {
+        return $this->getLazyCredentials()->fetchServiceAccountEmail();
+    }
+
+    /**
      * Generates a signature using the default credentials.
      *
      * @param string $toSign The bytes to sign.

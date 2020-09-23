@@ -79,6 +79,15 @@ class ServiceAccountKey extends OAuth2Credentials implements Credentials {
     }
 
     /**
+     * Fetches the service account email from the service account key file.
+     *
+     * @return string
+     */
+    public function fetchServiceAccountEmail(): string {
+        return $this->clientEmail;
+    }
+
+    /**
      * Generates a signature using the service account's private key.
      *
      * @param string $toSign The bytes to sign.
@@ -105,6 +114,9 @@ class ServiceAccountKey extends OAuth2Credentials implements Credentials {
     public function supportsCapability(string $capability): bool {
         switch ($capability) {
             case Credentials::CAN_FETCH_PROJECT_ID:
+                return true;
+
+            case Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL:
                 return true;
 
             case Credentials::CAN_GENERATE_SIGNATURE:

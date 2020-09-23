@@ -66,6 +66,13 @@ class AuthorizedUserCredentials extends OAuth2Credentials implements Credentials
     /**
      * Not supported.
      */
+    public function fetchServiceAccountEmail(): string {
+        throw new \BadMethodCallException(__CLASS__ . " does not support " . __FUNCTION__);
+    }
+
+    /**
+     * Not supported.
+     */
     public function generateSignature(string $toSign): GenerateSignatureResponse {
         throw new \BadMethodCallException(__CLASS__ . " does not support " . __FUNCTION__);
     }
@@ -75,7 +82,13 @@ class AuthorizedUserCredentials extends OAuth2Credentials implements Credentials
      */
     public function supportsCapability(string $capability): bool {
         switch ($capability) {
-            default:
+            case Credentials::CAN_FETCH_PROJECT_ID:
+                return false;
+
+            case Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL:
+                return false;
+
+            case Credentials::CAN_GENERATE_SIGNATURE:
                 return false;
         }
     }

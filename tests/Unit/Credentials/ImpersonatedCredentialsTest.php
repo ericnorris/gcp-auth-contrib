@@ -139,6 +139,10 @@ final class ImpersonatedCredentialsSourceImpl implements Credentials {
         throw new \RuntimeException("not implemented");
     }
 
+    public function fetchServiceAccountEmail(): string {
+        throw new \RuntimeException("not implemented");
+    }
+
     public function generateSignature(string $toSign): GenerateSignatureResponse {
         throw new \RuntimeException("not implemented");
     }

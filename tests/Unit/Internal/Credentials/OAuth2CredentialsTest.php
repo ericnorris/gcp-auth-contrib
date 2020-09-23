@@ -95,6 +95,10 @@ final class OAuth2CredentialsImpl extends OAuth2Credentials {
         throw new \RuntimeException("not implemented");
     }
 
+    public function fetchServiceAccountEmail(): string {
+        throw new \RuntimeException("not implemented");
+    }
+
     public function generateSignature(string $toSign): GenerateSignatureResponse {
         throw new \RuntimeException("not implemented");
     }

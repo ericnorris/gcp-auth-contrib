@@ -84,7 +84,23 @@ class CachedCredentials implements Credentials {
     }
 
     /**
+     * Fetches the service account from the cached credentials.
+     *
+     * @return string
+     */
+    public function fetchServiceAccountEmail(): string {
+        return $this->memoize(
+            $this->makeCacheKey(__FUNCTION__),
+            function(): string {
+                return $this->source->fetchServiceAccountEmail();
+            },
+        );
+    }
+
+    /**
      * Generates a signature using the underlying source credentials.
+     *
+     * NOTE: the response is not cached.
      *
      * @param string $toSign The bytes to sign.
      *

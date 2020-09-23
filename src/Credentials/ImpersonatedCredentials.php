@@ -131,6 +131,15 @@ class ImpersonatedCredentials implements Credentials, CacheAwareCredentials {
     }
 
     /**
+     * Returns the impersonated service account email.
+     *
+     * @return string
+     */
+    public function fetchServiceAccountEmail(): string {
+        return $this->target;
+    }
+
+    /**
      * Generates a signature using the IAM Credentials REST API
      * {@link https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/signBlob
      * signBlob} endpoint.
@@ -166,6 +175,9 @@ class ImpersonatedCredentials implements Credentials, CacheAwareCredentials {
         switch ($capability) {
             case Credentials::CAN_FETCH_PROJECT_ID:
                 return false;
+
+            case Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL:
+                return true;
 
             case Credentials::CAN_GENERATE_SIGNATURE:
                 return true;

@@ -13,8 +13,9 @@ use ericnorris\GCPAuthContrib\Response\GenerateSignatureResponse;
  */
 interface Credentials {
 
-    const CAN_FETCH_PROJECT_ID   = "fetchProjectID";
-    const CAN_GENERATE_SIGNATURE = "generateSignature";
+    const CAN_FETCH_PROJECT_ID            = "fetchProjectID";
+    const CAN_FETCH_SERVICE_ACCOUNT_EMAIL = "fetchServiceAccountEmail";
+    const CAN_GENERATE_SIGNATURE          = "generateSignature";
 
 
     /**
@@ -44,6 +45,13 @@ interface Credentials {
     public function fetchProjectID(): string;
 
     /**
+     * Fetches the service account email for these credentials.
+     *
+     * @return string
+     */
+    public function fetchServiceAccountEmail(): string;
+
+    /**
      * Generates a signature for the given byte string.
      *
      * @param string $toSign The bytes to sign.
@@ -52,11 +60,10 @@ interface Credentials {
      */
     public function generateSignature(string $toSign): GenerateSignatureResponse;
 
-
     /**
      * Returns true if the given ::CAN_* enum is supported by this implementation.
      *
-     * @param self::CAN_FETCH_PROJECT_ID|self::CAN_GENERATE_SIGNATURE $capability
+     * @param self::CAN_FETCH_PROJECT_ID|self::CAN_FETCH_SERVICE_ACCOUNT_EMAIL|self::CAN_GENERATE_SIGNATURE $capability
      *
      * @return bool
      */

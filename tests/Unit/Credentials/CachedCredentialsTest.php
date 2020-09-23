@@ -154,6 +154,12 @@ final class CredentialsImpl implements Credentials {
         return "a-project-id";
     }
 
+    public function fetchServiceAccountEmail(): string {
+        $this->timesCalled++;
+
+        return "a-service-account@iam.a-project.gserviceaccount.com";
+    }
+
     public function generateSignature(string $toSign): GenerateSignatureResponse {
         $this->timesCalled++;
 

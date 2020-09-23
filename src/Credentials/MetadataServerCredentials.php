@@ -21,9 +21,11 @@ class MetadataServerCredentials implements Credentials {
 
     const METADATA_ENDPOINT = "http://169.254.169.254/computeMetadata/v1/";
 
-    const ACCESS_TOKEN_URI = "instance/service-accounts/default/token";
-    const ID_TOKEN_URI     = "instance/service-accounts/default/identity";
-    const PROJECT_URI      = "project/project-id";
+    const ACCESS_TOKEN_URI    = "instance/service-accounts/default/token";
+    const ID_TOKEN_URI        = "instance/service-accounts/default/identity";
+    const SERVICE_ACCOUNT_URI = "instance/service-accounts/default/email";
+
+    const PROJECT_URI = "project/project-id";
 
 
     /** @var ClientInterface */
@@ -105,6 +107,15 @@ class MetadataServerCredentials implements Credentials {
     }
 
     /**
+     * Fetches the service account email from the metadata server.
+     *
+     * @return string
+     */
+    public function fetchServiceAccountEmail(): string {
+        return $this->sendMetadataRequest(self::SERVICE_ACCOUNT_URI);
+    }
+
+    /**
      * Not supported.
      */
     public function generateSignature(string $toSign): GenerateSignatureResponse {
@@ -118,6 +129,9 @@ class MetadataServerCredentials implements Credentials {
         switch ($capability) {
             case Credentials::CAN_FETCH_PROJECT_ID:
                 return true;
+
+            case Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL:
+                    return true;
 
             case Credentials::CAN_GENERATE_SIGNATURE:
                 return false;

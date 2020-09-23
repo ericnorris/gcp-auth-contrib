@@ -24,7 +24,8 @@
         "psr/cache": "^1.0",
         "symfony/cache": "^5.1",
         "firebase/php-jwt": "^5.2",
-        "google/auth": "^1.13"
+        "google/auth": "^1.13",
+        "fig/http-message-util": "^1.1"
     },
     "require-dev": {
         "vimeo/psalm": "^3.15",

@@ -22,8 +22,7 @@
 namespace ericnorris\GCPAuthContrib\Internal\Contracts;
 
 
-trait ParsesRFC3339Timestamps
-{
+trait ParsesRFC3339Timestamps {
     /**
      * Parses an RFC3339 formatted date time.
      *

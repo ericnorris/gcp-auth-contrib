@@ -36,9 +36,7 @@ abstract class OAuth2Credentials implements Credentials {
      * @return FetchAccessTokenResponse
      */
     public function fetchAccessToken(array $scopes = []): FetchAccessTokenResponse {
-        $claims = [
-            "scope" => implode(" ", $scopes),
-        ];
+        $claims = [];
 
         if (!empty($scopes)) {
             $claims["scope"] = implode(" ", $scopes);

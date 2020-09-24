@@ -120,7 +120,7 @@ class ServiceAccountKey extends OAuth2Credentials implements Credentials {
                 return true;
 
             case Credentials::CAN_GENERATE_SIGNATURE:
-                return false;
+                return true;
         }
     }
 

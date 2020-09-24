@@ -36,7 +36,9 @@ abstract class OAuth2Credentials implements Credentials {
      * @return FetchAccessTokenResponse
      */
     public function fetchAccessToken(array $scopes = []): FetchAccessTokenResponse {
-        $claims = [];
+        $claims = [
+            "scope" => implode(" ", $scopes),
+        ];
 
         if (!empty($scopes)) {
             $claims["scope"] = implode(" ", $scopes);
@@ -51,7 +53,7 @@ abstract class OAuth2Credentials implements Credentials {
         return new FetchAccessTokenResponse(
             (string)$responseData["access_token"],
             Time::calculateExpiresAt((int)$responseData["expires_in"])->getTimestamp(),
-            (string)$responseData["scope"],
+            (string)($responseData["scope"] ?? ""),
             (string)$responseData["token_type"],
         );
     }

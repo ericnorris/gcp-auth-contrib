@@ -28,6 +28,8 @@ class ImpersonatedCredentials implements Credentials, CacheAwareCredentials {
     const IDENTITY_TOKEN_URI = "projects/-/serviceAccounts/%s:generateIdToken";
     const SIGN_BLOB_URI      = "projects/-/serviceAccounts/%s:signBlob";
 
+    private const IAM_CREDENTIALS_SCOPES = ["https://www.googleapis.com/auth/cloud-platform"];
+
 
     /** @var ClientInterface */
     private $httpClient;
@@ -186,7 +188,7 @@ class ImpersonatedCredentials implements Credentials, CacheAwareCredentials {
 
     private function sendIAMCredentialsRequest(string $uri, array $params): array {
         $sourceAccessToken = $this->source
-            ->fetchAccessToken()
+            ->fetchAccessToken(self::IAM_CREDENTIALS_SCOPES)
             ->getAccessToken();
 
         $response = $this->httpClient->send(new Request(

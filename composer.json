@@ -20,7 +20,7 @@
     },
     "require": {
         "guzzlehttp/psr7": "^1.6",
-        "guzzlehttp/guzzle": "^7.0",
+        "guzzlehttp/guzzle": "^6",
         "psr/cache": "^1.0",
         "symfony/cache": "^5.1",
         "firebase/php-jwt": "^5.2",
@@ -31,6 +31,7 @@
         "vimeo/psalm": "^3.15",
         "phpunit/phpunit": "^9.3",
         "spatie/phpunit-snapshot-assertions": "^4.2",
-        "mikey179/vfsstream": "^1.6"
+        "mikey179/vfsstream": "^1.6",
+        "php-coveralls/php-coveralls": "^2.2"
     }
 }

@@ -1,7 +1,8 @@
 = gcp-auth-contrib
-
 // asciidoc settings
-:toc: macro
+:toc:
+:toc-placement!:
+:toc-title!:
 
 [.lead]
 image:https://github.com/ericnorris/gcp-auth-contrib/workflows/CI/badge.svg[CI status, link=https://github.com/ericnorris/gcp-auth-contrib/actions?query=workflow%3ACI]

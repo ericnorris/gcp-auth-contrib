@@ -5,6 +5,7 @@ namespace ericnorris\GCPAuthContrib\Tests\Unit\Credentials;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 
+use ericnorris\GCPAuthContrib\Contracts\Credentials;
 use ericnorris\GCPAuthContrib\Credentials\ApplicationDefaultCredentials;
 use ericnorris\GCPAuthContrib\Credentials\AuthorizedUserCredentials;
 use ericnorris\GCPAuthContrib\Credentials\MetadataServerCredentials;
@@ -40,13 +41,13 @@ final class ApplicationDefaultCredentialsTest extends TestCase {
 
         $this->vfs = vfsStream::setup('root', null, $structure);
 
-        $this->mockCredentialsFactory = $this->createStub(CredentialsFactory::class);
+        $this->mockCredentialsFactory = $this->createMock(CredentialsFactory::class);
     }
 
     /**
      * @dataProvider envVarPathProvider
      */
-    public function testLazyLoad(array $envVars, string $expectedClass) {
+    public function testLazyLoad(array $envVars, string $expectedClass): void {
         foreach ($envVars as $name => $path) {
             $vfsPath = $this->vfs->getChild($path)->url();
 
@@ -69,6 +70,52 @@ final class ApplicationDefaultCredentialsTest extends TestCase {
         foreach ($envVars as $name => $_) {
             putenv("$name=");
         }
+    }
+
+    public function testPassthrough(): void {
+        $mockCredentials = $this->createMock(MetadataServerCredentials::class);
+
+        $this->mockCredentialsFactory
+            ->method("makeMetadataServerCredentials")
+            ->willReturn($mockCredentials);
+
+        $adc = new ApplicationDefaultCredentials($this->mockCredentialsFactory);
+
+        $mockCredentials
+            ->expects($this->once())
+            ->method("fetchAccessToken");
+
+        $adc->fetchAccessToken();
+
+        $mockCredentials
+            ->expects($this->once())
+            ->method("fetchIdentityToken");
+
+        $adc->fetchIdentityToken("https://example.com");
+
+        $mockCredentials
+            ->expects($this->once())
+            ->method("fetchProjectID");
+
+        $adc->fetchProjectID();
+
+        $mockCredentials
+            ->expects($this->once())
+            ->method("fetchServiceAccountEmail");
+
+        $adc->fetchServiceAccountEmail();
+
+        $mockCredentials
+            ->expects($this->once())
+            ->method("generateSignature");
+
+        $adc->generateSignature("toSign");
+
+        $mockCredentials
+            ->expects($this->once())
+            ->method("supportsCapability");
+
+        $adc->supportsCapability(Credentials::CAN_FETCH_PROJECT_ID);
     }
 
     public function envVarPathProvider(): array {

@@ -119,6 +119,10 @@ class AccessTokenFetcher implements
      * @return string The signature for the given string.
      */
     public function signBlob($stringToSign, $forceOpenssl = false) {
+        if (!$this->source->supportsCapability(Credentials::CAN_GENERATE_SIGNATURE)) {
+            throw new \BadMethodCallException(\get_class($this->source) . " does not support generating signatures");
+        }
+
         return $this->source->generateSignature($stringToSign)->getSignature();
     }
 

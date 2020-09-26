@@ -1,5 +1,123 @@
 = gcp-auth-contrib
 
+// asciidoc settings
+:toc: macro
+
+[.lead]
 image:https://github.com/ericnorris/gcp-auth-contrib/workflows/CI/badge.svg[CI status, link=https://github.com/ericnorris/gcp-auth-contrib/actions?query=workflow%3ACI]
 image:https://coveralls.io/repos/github/ericnorris/gcp-auth-contrib/badge.svg[Coveralls.io coverage percentage, link=https://coveralls.io/github/ericnorris/gcp-auth-contrib]
 image:https://shepherd.dev/github/ericnorris/gcp-auth-contrib/coverage.svg[Psalm type coverage percentage, link=https://shepherd.dev/github/ericnorris/gcp-auth-contrib]
+
+`gcp-auth-contrib` is an unofficial PHP library for authenticating with Google Cloud Platform products that focuses on sane defaults, correctness, and speed.
+
+- Safely caches all authentication IO to reduce latency across requests when running PHP in a web server context
+- All IO is done lazily, avoids link:https://github.com/googleapis/google-auth-library-php/issues/297[accidentally DoSing the metadata server] by not performing any IO during initialization
+- Supports link:https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials[service account impersonation] out of the box
+- Clear distinction between fetching OAuth2 access tokens and OIDC identity tokens to make it simple to call link:https://cloud.google.com/functions/docs/securing/authenticating#service-to-function[Cloud Functions], link:https://cloud.google.com/functions/docs/securing/authenticating#service-to-function[Cloud Run], and similar products
+- Fully typed via link:https://github.com/vimeo/psalm[Psalm]
+
+[source, php]
+....
+
+$fetcher = \ericnorris\GCPAuthContrib\OpinionatedDefaults::get()->makeCredentialsFetcher();
+
+$storageClient = new \Google\Cloud\Storage\StorageClient([
+    "credentialsFetcher" => $fetcher,
+]);
+
+// ...
+....
+
+toc::[]
+
+== Installation
+
+....
+composer require ericnorris/gcp-auth-contrib
+....
+
+== Usage
+
+The following examples all make use of the link:/src/OpinionatedDefaults.php[OpinionatedDefaults] class. The defaults are:
+
+- Use a plain link:https://github.com/guzzle/guzzle/tree/master[Guzzle] HTTP client. This means exceptions will be thrown for HTTP errors, e.g. for `500s`.
+- Use the link:https://cloud.google.com/docs/authentication/production#automatically[Application Default Credentials] pattern for finding credentials. *Note:* you *DO NOT* need to provide a service account key file if you are running your code on a Google Cloud Platform product. Using this library (and the opinionated defaults) will authenticate automatically using the metadata server of the product you are running on.
+- Cache authentication IO using a link:https://symfony.com/doc/current/components/cache.html[Symfony] in-memory and filesystem cache. Access and identity tokens are cached for as long as they are valid, and other requests are cached permanently when it is safe to do so.
+
+If these defaults do not work for you, the link:/src/Credentials[Credentials] directory has a flexible set of classes you may use for authentication. It is strongly encouraged that you wrap any such classes with a link:/src/Credentials/CachedCredentials.php[CachedCredentials] instance to avoid unecessary IO.
+
+=== Authenticating with Google Cloud Platform APIs
+
+The Google Cloud Platform PHP library generally requires a class implementing the link:https://github.com/googleapis/google-auth-library-php/blob/9ccaea6037abff9a99b8a58891b9dc8fe0f0d1b8/src/FetchAuthTokenInterface.php[FetchAuthTokenInterface] interface to be passed in to their client via the `credentials` or `credentialsFetcher` option array key. This depends on the particular client, see link:https://googleapis.github.io/google-cloud-php/#/[the docs] for your particular client to know which one to use.
+
+You can retrieve a `FetchAuthTokenInterface` compatible interface by calling `makeCredentialsFetcher` on the `OpinionatedDefaults` class.
+
+[source, php]
+....
+$fetcher = \ericnorris\GCPAuthContrib\OpinionatedDefaults::get()->makeCredentialsFetcher();
+
+// the StorageClient class takes the parameter as a "credentialsFetcher" option
+$storageClient = new \Google\Cloud\Storage\StorageClient([
+    "credentialsFetcher" => $fetcher,
+]);
+
+// the BigtableClient class takes the parameter as a "credentials" option
+$bigtableClient = new \Google\Cloud\Bigtable\BigtableClient([
+    "credentials" => $fetcher,
+]);
+
+// ...
+....
+
+=== Authenticating with Google Cloud Platform serverless products
+
+Calling authenticated Cloud Run or Cloud Function services requires an OIDC identity token. All instances of link:https://github.com/ericnorris/gcp-auth-contrib/blob/master/src/Contracts/Credentials.php[Credentials] in this library offer a separate `fetchIdentityToken(string $audience)` method for exactly this purpose.
+
+*Note:* This includes the link:https://github.com/ericnorris/gcp-auth-contrib/blob/master/src/Credentials/AuthorizedUserCredentials.php[AuthorizedUserCredentials]! You can use a user's OAuth credentials (via `gcloud auth application-default login` or by doing the OAuth2 flow yourself) to call authenticated serverless products.
+
+[source, php]
+....
+$credentials = \ericnorris\GCPAuthContrib\OpinionatedDefaults::get()->makeCredentials();
+
+$identityTokenResponse = $credentials->fetchIdentityToken("https://your-cloud-function-or-run-url-here");
+
+$headers = [
+    "Authorization: Bearer {$identityTokenResponse->getIdentityToken()}",
+];
+
+$curl = curl_init();
+
+curl_setopt($curl, CURLOPT_URL, "https://your-cloud-function-or-run-url-here");
+curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+// ...
+....
+
+=== Impersonating service accounts
+
+You may impersonate another Google Cloud Platform service account using the link:https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials[service account impersonation] flow. Assuming the service account running the below code has the `roles/iam.serviceAccountTokenCreator` IAM role on an imaginary service account `other-account@some-project-id.iam.gserviceaccount.com`:
+
+[source, php]
+....
+$fetcher = \ericnorris\GCPAuthContrib\OpinionatedDefaults::get()->makeImpersonatedCredentialsFetcher(
+    "other-account@some-project-id.iam.gserviceaccount.com",
+);
+
+// calls will be authenticated using the other account's credentials
+$storageClient = new \Google\Cloud\Storage\StorageClient([
+    "credentialsFetcher" => $fetcher,
+]);
+
+// ...
+....
+
+=== Determining the project ID
+
+May not be supported by all credential types.
+
+[source, php]
+....
+$credentials = \ericnorris\GCPAuthContrib\OpinionatedDefaults::get()->makeCredentials();
+
+echo "project ID: {$credentials->fetchProjectID()}";
+....

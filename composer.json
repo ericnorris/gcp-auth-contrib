@@ -1,5 +1,6 @@
 {
     "name": "ericnorris/gcp-auth-contrib",
+    "description": "Unofficial Google Cloud Platform authentication library focusing on speed and correctness.",
     "type": "library",
     "license": "MIT",
     "authors": [

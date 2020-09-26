@@ -125,11 +125,13 @@ class CredentialsWithImpersonationFallback implements Credentials {
                 return $this->source->supportsCapability($capability);
 
             case Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL:
-                return $this->source->supportsCapability($capability);
+                return $this->source->supportsCapability($capability) ||
+                    $this->fallbackAccount;
 
             case Credentials::CAN_GENERATE_SIGNATURE:
-                return $this->fallbackAccount ||
-                    $this->source->supportsCapability(Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL);
+                return $this->source->supportsCapability(Credentials::CAN_GENERATE_SIGNATURE) ||
+                    $this->source->supportsCapability(Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL) ||
+                    $this->fallbackAccount;
         }
     }
 

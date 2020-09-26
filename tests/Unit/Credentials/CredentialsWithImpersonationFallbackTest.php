@@ -29,6 +29,12 @@ final class CredentialsWithImpersonationFallbackTest extends TestCase {
             ->willReturn($this->mockFallback);
 
         $this->sut = new CredentialsWithImpersonationFallback($this->mockCredentials, $this->mockFactory);
+
+        $this->sutWithFallbackAccount = new CredentialsWithImpersonationFallback(
+            $this->mockCredentials,
+            $this->mockFactory,
+            "fallback-account",
+        );
     }
 
     public function testFetchesAccessToken(): void {
@@ -74,6 +80,21 @@ final class CredentialsWithImpersonationFallbackTest extends TestCase {
         $this->sut->fetchIdentityToken(self::EXAMPLE_AUDIENCE_01);
     }
 
+    public function testFetchesIdentityTokenThrowsException(): void {
+        $dummyRequest = new Request("GET", "some-endpoint-that-500s");
+        $badResponse  = new Response(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
+        $exception    = new ClientException("test 500", $dummyRequest, $badResponse);
+
+        $this->mockCredentials
+            ->expects($this->once())
+            ->method("fetchIdentityToken")
+            ->willThrowException($exception);
+
+        $this->expectException(ClientException::class);
+
+        $this->sut->fetchIdentityToken(self::EXAMPLE_AUDIENCE_01);
+    }
+
     public function testGeneratesSignature(): void {
         $this->mockCredentials
             ->expects($this->any())
@@ -93,6 +114,85 @@ final class CredentialsWithImpersonationFallbackTest extends TestCase {
             ->method("generateSignature");
 
         $this->sut->generateSignature("toSign");
+    }
+
+    public function testGeneratesSignatureException(): void {
+        $this->mockCredentials
+            ->expects($this->any())
+            ->method("supportsCapability")
+            ->will($this->returnCallback(function(string $capability) {
+                switch ($capability) {
+                    default:
+                        return false;
+                }
+            }));
+
+        $this->expectException(\BadMethodCallException::class);
+
+        $this->sut->generateSignature("toSign");
+    }
+
+    public function testGeneratesSignaturePassthrough(): void {
+        $this->mockCredentials
+            ->expects($this->any())
+            ->method("supportsCapability")
+            ->will($this->returnCallback(function(string $capability) {
+                switch ($capability) {
+                    case Credentials::CAN_GENERATE_SIGNATURE:
+                        return true;
+
+                    default:
+                        return false;
+                }
+            }));
+
+        $this->mockCredentials
+            ->expects($this->once())
+            ->method("generateSignature");
+
+        $this->mockFallback
+            ->expects($this->never())
+            ->method("generateSignature");
+
+        $this->sut->generateSignature("toSign");
+    }
+
+    public function testSupportsCapability(): void {
+        $supported = [];
+
+        $this->mockCredentials
+            ->expects($this->any())
+            ->method("supportsCapability")
+            ->will($this->returnCallback(function(string $capability) use (&$supported) {
+                return \in_array($capability, $supported);
+            }));
+
+        $supported = [
+            Credentials::CAN_FETCH_PROJECT_ID,
+            Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL,
+            Credentials::CAN_GENERATE_SIGNATURE,
+        ];
+
+        $this->assertTrue($this->sut->supportsCapability(Credentials::CAN_FETCH_PROJECT_ID));
+        $this->assertTrue($this->sut->supportsCapability(Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL));
+        $this->assertTrue($this->sut->supportsCapability(Credentials::CAN_GENERATE_SIGNATURE));
+
+        $supported = [
+            Credentials::CAN_FETCH_PROJECT_ID,
+            Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL,
+        ];
+
+        $this->assertTrue($this->sut->supportsCapability(Credentials::CAN_GENERATE_SIGNATURE));
+
+        $supported = [
+            Credentials::CAN_FETCH_PROJECT_ID,
+        ];
+
+        $this->assertFalse($this->sut->supportsCapability(Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL));
+        $this->assertFalse($this->sut->supportsCapability(Credentials::CAN_GENERATE_SIGNATURE));
+
+        $this->assertTrue($this->sutWithFallbackAccount->supportsCapability(Credentials::CAN_FETCH_SERVICE_ACCOUNT_EMAIL));
+        $this->assertTrue($this->sutWithFallbackAccount->supportsCapability(Credentials::CAN_GENERATE_SIGNATURE));
     }
 
 }

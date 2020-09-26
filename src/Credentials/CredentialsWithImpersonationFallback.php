@@ -73,7 +73,9 @@ class CredentialsWithImpersonationFallback implements Credentials {
         try {
             return $this->source->fetchIdentityToken($audience);
         } catch (ClientException $ex) {
-            if ($ex->getResponse()->getStatusCode() !== StatusCodeInterface::STATUS_NOT_FOUND) {
+            $response = $ex->getResponse();
+
+            if (!$response || $response->getStatusCode() !== StatusCodeInterface::STATUS_NOT_FOUND) {
                 throw $ex;
             }
 

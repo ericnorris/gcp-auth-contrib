@@ -27,7 +27,12 @@ trait MatchesRequestSnapshots {
         $fakeStack = \GuzzleHttp\HandlerStack::create($fakeHandler);
         $fakeStack->push($historyMiddleware);
 
-        return new \GuzzleHttp\Client(['handler' => $fakeStack]);
+        return new \GuzzleHttp\Client([
+            "handler" => $fakeStack,
+            "headers" => [
+                "user-agent" => "ericnorris/gcp-auth-contrib unit test"
+            ],
+        ]);
     }
 
     protected function assertRequestHistoryMatchesSnapshot() {

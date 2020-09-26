@@ -62,7 +62,7 @@ class MetadataServerCredentials implements Credentials {
         return new FetchAccessTokenResponse(
             (string)$responseData["access_token"],
             Time::calculateExpiresAt((int)$responseData["expires_in"])->getTimestamp(),
-            (string)$responseData["scope"],
+            (string)($responseData["scope"] ?? ""),
             "Bearer",
         );
     }
